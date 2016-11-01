@@ -54,7 +54,7 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
 		retval.put(IATA_FREQ, AirportService.calculateIataFrequency());
 
-		retval.put(RADIUS_FREQ, AirportService.calculateDatasize());
+		retval.put(RADIUS_FREQ, WeatherService.calculateDatasize());
 
 		return gson.toJson(retval);
 	}
@@ -79,15 +79,13 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
 		List<AtmosphericInformation> retval = new ArrayList<AtmosphericInformation>();
 		if (radius == 0) {
-			int idx = AirportService.getAirportDataIdx(iata);
-			retval.add(WeatherService.atmosphericInformation.get(idx));
+			retval.add(WeatherService.getAtmosphericInformation(iata));
 		} else {
 			AirportData ad = AirportService.findAirportData(iata);
-			for (int i = 0; i < AirportService.getAirportDataSize(); i++) {
-				if (AirportService.calculateDistance(ad,
-						AirportService.airportData.get(i)) <= radius) {
-					AtmosphericInformation ai = WeatherService.atmosphericInformation
-							.get(i);
+			for (AirportData data : AirportService.getAirportValues()) {
+				if (AirportService.calculateDistance(ad, data) <= radius) {
+					AtmosphericInformation ai = WeatherService
+							.getAtmosphericInformation(data.getIata());
 					if (ai.getCloudCover() != null || ai.getHumidity() != null
 							|| ai.getPrecipitation() != null
 							|| ai.getPressure() != null

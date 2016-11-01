@@ -1,10 +1,9 @@
 package com.crossover.trial.weather.util;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
 import com.crossover.trial.weather.pojo.AirportData;
 import com.crossover.trial.weather.pojo.AtmosphericInformation;
@@ -12,7 +11,7 @@ import com.crossover.trial.weather.pojo.AtmosphericInformation;
 public class AirportService {
 
 	/** all known airports */
-	public static List<AirportData> airportData = new ArrayList<AirportData>();
+	private static Map<String, AirportData> airportMap = new HashMap<String, AirportData>();
 	/**
 	 * Internal performance counter to better understand most requested
 	 * information, this map can be improved but for now provides the basis for
@@ -21,10 +20,10 @@ public class AirportService {
 	 * using a REST request and aggregate with other performance metrics
 	 * {@link #ping()}
 	 */
-	public static Map<AirportData, Integer> requestFrequency = new HashMap<AirportData, Integer>();
+	private static Map<AirportData, Integer> requestFrequency = new HashMap<AirportData, Integer>();
 
 	/** earth radius in KM */
-	public static final double EARTH_RADIUS_KM = 6372.8;
+	private static final double EARTH_RADIUS_KM = 6372.8;
 
 	/**
 	 * Add a new known airport to our list.
@@ -45,10 +44,10 @@ public class AirportService {
 		// parameters
 		AirportData ad = new AirportData(iataCode, latitude, longitude);
 		// add into airport data list
-		airportData.add(ad);
+		airportMap.put(iataCode, ad);
 
-		AtmosphericInformation ai = new AtmosphericInformation();
-		WeatherService.atmosphericInformation.add(ai);
+		WeatherService.addAtmosphericInformation(iataCode,
+				new AtmosphericInformation());
 		return ad;
 	}
 
@@ -60,8 +59,7 @@ public class AirportService {
 	 * @return airport data or null if not found
 	 */
 	public static AirportData findAirportData(String iataCode) {
-		return airportData.stream().filter(ap -> ap.getIata().equals(iataCode))
-				.findFirst().orElse(null);
+		return airportMap.get(iataCode);
 	}
 
 	/**
@@ -84,35 +82,10 @@ public class AirportService {
 		return AirportService.EARTH_RADIUS_KM * c;
 	}
 
-	/**
-	 * Given an iataCode find the airport data
-	 *
-	 * @param iataCode
-	 *            as a string
-	 * @return airport data or null if not found
-	 */
-	public static int getAirportDataIdx(String iataCode) {
-		AirportData ad = findAirportData(iataCode);
-		return airportData.indexOf(ad);
-	}
-
-	public static int[] calculateDatasize() {
-		int m = WeatherService.radiusFreq.keySet().stream()
-				.max(Double::compare).orElse(1000.0).intValue() + 1;
-
-		int[] hist = new int[m];
-		for (Map.Entry<Double, Integer> e : WeatherService.radiusFreq
-				.entrySet()) {
-			int i = e.getKey().intValue() % 10;
-			hist[i] += e.getValue();
-		}
-		return hist;
-	}
-
 	public static Map<String, Double> calculateIataFrequency() {
 		Map<String, Double> freq = new HashMap<>();
 		// fraction of queries
-		for (AirportData data : airportData) {
+		for (AirportData data : airportMap.values()) {
 			double frac = (double) requestFrequency.getOrDefault(data, 0)
 					/ requestFrequency.size();
 			freq.put(data.getIata(), frac);
@@ -129,11 +102,11 @@ public class AirportService {
 	}
 
 	public static int getAirportDataSize() {
-		return airportData.size();
+		return airportMap.size();
 	}
 
 	public static void init() {
-		airportData.clear();
+		airportMap.clear();
 		requestFrequency.clear();
 
 		addAirport("BOS", 42.364347, -71.005181);
@@ -149,17 +122,19 @@ public class AirportService {
 	 * @param iata
 	 */
 	public static void deleteAirport(String iata) {
-		// TODO: Use hash map instead of list
-		for (AirportData data : airportData) {
-			if (iata.equals(data.getIata())) {
-				// remove atmospheric information
-				WeatherService.removeAtmosphericInfo(AirportService
-						.getAirportDataIdx(data.getIata()));
-				// remove airport data
-				airportData.remove(data);
-				return;
-			}
-		}
+		// remove airport data from map
+		airportMap.remove(iata);
+		// remove atmospheric information
+		WeatherService.removeAtmosphericInfo(iata);
+		return;
+	}
+
+	public static Set<String> getAirportKeys() {
+		return airportMap.keySet();
+	}
+
+	public static Collection<AirportData> getAirportValues() {
+		return airportMap.values();
 	}
 
 }

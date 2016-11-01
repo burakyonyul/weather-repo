@@ -1,7 +1,5 @@
 package com.crossover.trial.weather.endpoint.collector;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Path;
@@ -10,9 +8,7 @@ import javax.ws.rs.core.Response;
 
 import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.pojo.AirportData;
-import com.crossover.trial.weather.pojo.AtmosphericInformation;
 import com.crossover.trial.weather.pojo.DataPoint;
-import com.crossover.trial.weather.pojo.DataPointType;
 import com.crossover.trial.weather.util.AirportService;
 import com.crossover.trial.weather.util.WeatherService;
 import com.google.gson.Gson;
@@ -29,9 +25,6 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 	public final static Logger LOGGER = Logger
 			.getLogger(RestWeatherCollectorEndpoint.class.getName());
 
-	/** shared gson json to object factory */
-	public final static Gson gson = new Gson();
-
 	@Override
 	public Response ping() {
 		return Response.status(Response.Status.OK).entity("ready").build();
@@ -41,8 +34,8 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 	public Response updateWeather(@PathParam("iata") String iataCode,
 			@PathParam("pointType") String pointType, String datapointJson) {
 		try {
-			addDataPoint(iataCode, pointType,
-					gson.fromJson(datapointJson, DataPoint.class));
+			WeatherService.addDataPoint(iataCode, pointType,
+					new Gson().fromJson(datapointJson, DataPoint.class));
 		} catch (WeatherException e) {
 			e.printStackTrace();
 		}
@@ -51,11 +44,8 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 
 	@Override
 	public Response getAirports() {
-		Set<String> retval = new HashSet<>();
-		for (AirportData ad : AirportService.airportData) {
-			retval.add(ad.getIata());
-		}
-		return Response.status(Response.Status.OK).entity(retval).build();
+		return Response.status(Response.Status.OK)
+				.entity(AirportService.getAirportKeys()).build();
 	}
 
 	@Override
@@ -85,94 +75,4 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 		return Response.noContent().build();
 	}
 
-	//
-	// Internal support methods
-	//
-
-	/**
-	 * Update the airports weather data with the collected data.
-	 *
-	 * @param iataCode
-	 *            the 3 letter IATA code
-	 * @param pointType
-	 *            the point type {@link DataPointType}
-	 * @param dp
-	 *            a datapoint object holding pointType data
-	 *
-	 * @throws WeatherException
-	 *             if the update can not be completed
-	 */
-	public void addDataPoint(String iataCode, String pointType, DataPoint dp)
-			throws WeatherException {
-		updateAtmosphericInformation(
-				WeatherService.findAtmosphericInfo(AirportService
-						.getAirportDataIdx(iataCode)), pointType, dp);
-	}
-
-	/**
-	 * update atmospheric information with the given data point for the given
-	 * point type
-	 *
-	 * @param ai
-	 *            the atmospheric information object to update
-	 * @param pointType
-	 *            the data point type as a string
-	 * @param dp
-	 *            the actual data point
-	 */
-	public void updateAtmosphericInformation(AtmosphericInformation ai,
-			String pointType, DataPoint dp) throws WeatherException {
-		final DataPointType dptype = DataPointType.valueOf(pointType
-				.toUpperCase());
-
-		if (pointType.equalsIgnoreCase(DataPointType.WIND.name())) {
-			if (dp.getMean() >= 0) {
-				ai.setWind(dp);
-				ai.setLastUpdateTime(System.currentTimeMillis());
-				return;
-			}
-		}
-
-		if (pointType.equalsIgnoreCase(DataPointType.TEMPERATURE.name())) {
-			if (dp.getMean() >= -50 && dp.getMean() < 100) {
-				ai.setTemperature(dp);
-				ai.setLastUpdateTime(System.currentTimeMillis());
-				return;
-			}
-		}
-
-		if (pointType.equalsIgnoreCase(DataPointType.HUMIDTY.name())) {
-			if (dp.getMean() >= 0 && dp.getMean() < 100) {
-				ai.setHumidity(dp);
-				ai.setLastUpdateTime(System.currentTimeMillis());
-				return;
-			}
-		}
-
-		if (pointType.equalsIgnoreCase(DataPointType.PRESSURE.name())) {
-			if (dp.getMean() >= 650 && dp.getMean() < 800) {
-				ai.setPressure(dp);
-				ai.setLastUpdateTime(System.currentTimeMillis());
-				return;
-			}
-		}
-
-		if (pointType.equalsIgnoreCase(DataPointType.CLOUDCOVER.name())) {
-			if (dp.getMean() >= 0 && dp.getMean() < 100) {
-				ai.setCloudCover(dp);
-				ai.setLastUpdateTime(System.currentTimeMillis());
-				return;
-			}
-		}
-
-		if (pointType.equalsIgnoreCase(DataPointType.PRECIPITATION.name())) {
-			if (dp.getMean() >= 0 && dp.getMean() < 100) {
-				ai.setPrecipitation(dp);
-				ai.setLastUpdateTime(System.currentTimeMillis());
-				return;
-			}
-		}
-
-		throw new IllegalStateException("couldn't update atmospheric data");
-	}
 }
