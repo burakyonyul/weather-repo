@@ -55,6 +55,7 @@ public class WeatherClient {
                 .withFirst(first).withLast(last).withMean(mean).withMedian(median).withCount(count)
                 .build();
         Response post = path.request().post(Entity.entity(dp, "application/json"));
+        System.out.println(post);
     }
 
     public void exit() {
