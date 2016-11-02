@@ -13,9 +13,6 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import com.crossover.trial.weather.pojo.AirportData;
 
 /**
  * A simple airport loader which reads a file from disk and sends entries to the
@@ -54,6 +51,19 @@ public class AirportLoader {
 		collect = client.target("http://localhost:9090/collect");
 	}
 
+	public static void main(String args[]) throws IOException,
+			InterruptedException, ExecutionException {
+		File airportDataFile = new File(args[0]);
+		if (!airportDataFile.exists() || airportDataFile.length() == 0) {
+			System.err.println(airportDataFile + " is not a valid input");
+			System.exit(1);
+		}
+
+		AirportLoader al = new AirportLoader();
+		al.upload(new FileInputStream(airportDataFile));
+		System.exit(0);
+	}
+
 	public void upload(InputStream airportDataStream) throws IOException,
 			InterruptedException, ExecutionException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -80,6 +90,20 @@ public class AirportLoader {
 	}
 
 	/**
+	 * This method extracts iata code from double quote
+	 * 
+	 * @param iataCode
+	 * @return
+	 */
+	private String extractExactIataCode(String iataCode) {
+		if (iataCode.startsWith(DOUBLE_QUOTE)
+				&& iataCode.endsWith(DOUBLE_QUOTE) && iataCode.length() > 1) {
+			iataCode = iataCode.substring(1, iataCode.length() - 1);
+		}
+		return iataCode;
+	}
+
+	/**
 	 * This method sends post request to collector endpoint for adding new
 	 * airport
 	 * 
@@ -97,32 +121,5 @@ public class AirportLoader {
 				.resolveTemplate(PARAM_LAT, latitude)
 				.resolveTemplate(PARAM_LONG, longitude).request()
 				.post(Entity.entity(null, MediaType.APPLICATION_JSON));
-	}
-
-	/**
-	 * This method extracts iata code from double quote
-	 * 
-	 * @param iataCode
-	 * @return
-	 */
-	private String extractExactIataCode(String iataCode) {
-		if (iataCode.startsWith(DOUBLE_QUOTE)
-				&& iataCode.endsWith(DOUBLE_QUOTE) && iataCode.length() > 1) {
-			iataCode = iataCode.substring(1, iataCode.length() - 1);
-		}
-		return iataCode;
-	}
-
-	public static void main(String args[]) throws IOException,
-			InterruptedException, ExecutionException {
-		File airportDataFile = new File(args[0]);
-		if (!airportDataFile.exists() || airportDataFile.length() == 0) {
-			System.err.println(airportDataFile + " is not a valid input");
-			System.exit(1);
-		}
-
-		AirportLoader al = new AirportLoader();
-		al.upload(new FileInputStream(airportDataFile));
-		System.exit(0);
 	}
 }

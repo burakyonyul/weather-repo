@@ -31,16 +31,35 @@ public class WeatherClient {
         collect = client.target(BASE_URI + "/collect");
     }
 
+    public static void main(String[] args) {
+        WeatherClient wc = new WeatherClient();
+        wc.pingCollect();
+        wc.populate("wind", 0, 10, 6, 4, 20);
+
+        wc.query("BOS");
+        wc.query("JFK");
+        wc.query("EWR");
+        wc.query("LGA");
+        wc.query("MMU");
+
+        wc.pingQuery();
+        wc.exit();
+        System.out.print("complete");
+        System.exit(0);
+    }
+
+    public void exit() {
+        try {
+            collect.path("/exit").request().get();
+        } catch (Throwable t) {
+            // swallow
+        }
+    }
+
     public void pingCollect() {
         WebTarget path = collect.path("/ping");
         Response response = path.request().get();
         System.out.print("collect.ping: " + response.readEntity(String.class) + "\n");
-    }
-
-    public void query(String iata) {
-        WebTarget path = query.path("/weather/" + iata + "/0");
-        Response response = path.request().get();
-        System.out.println("query." + iata + ".0: " + response.readEntity(String.class));
     }
 
     public void pingQuery() {
@@ -58,28 +77,9 @@ public class WeatherClient {
         System.out.println(post);
     }
 
-    public void exit() {
-        try {
-            collect.path("/exit").request().get();
-        } catch (Throwable t) {
-            // swallow
-        }
-    }
-
-    public static void main(String[] args) {
-        WeatherClient wc = new WeatherClient();
-        wc.pingCollect();
-        wc.populate("wind", 0, 10, 6, 4, 20);
-
-        wc.query("BOS");
-        wc.query("JFK");
-        wc.query("EWR");
-        wc.query("LGA");
-        wc.query("MMU");
-
-        wc.pingQuery();
-        wc.exit();
-        System.out.print("complete");
-        System.exit(0);
+    public void query(String iata) {
+        WebTarget path = query.path("/weather/" + iata + "/0");
+        Response response = path.request().get();
+        System.out.println("query." + iata + ".0: " + response.readEntity(String.class));
     }
 }

@@ -28,39 +28,6 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 			.getLogger(RestWeatherCollectorEndpoint.class);
 
 	@Override
-	public Response ping() {
-		return Response.status(Response.Status.OK).entity("ready").build();
-	}
-
-	@Override
-	public Response updateWeather(String iataCode, String pointType,
-			String datapointJson) {
-		try {
-			WeatherService.addDataPoint(iataCode, pointType,
-					new Gson().fromJson(datapointJson, DataPoint.class));
-		} catch (WeatherException e) {
-			logger.error(e.getMessage());
-		}
-		return Response.status(Response.Status.OK).build();
-	}
-
-	@Override
-	public Response getAirports() {
-		Set<String> airportKeys = AirportService.getAirportKeys();
-		logger.debug(MessageFormat.format(
-				"Retrieved airports with codes: \"{0}\"", airportKeys));
-		return Response.status(Response.Status.OK).entity(airportKeys).build();
-	}
-
-	@Override
-	public Response getAirport(String iata) {
-		AirportData airportData = AirportService.findAirportData(iata);
-		logger.debug(MessageFormat.format("Retrieved airport: \"{0}\"",
-				airportData));
-		return Response.status(Response.Status.OK).entity(airportData).build();
-	}
-
-	@Override
 	public Response addAirport(String iata, String latString, String longString) {
 		AirportService.addAirport(iata, Double.valueOf(latString),
 				Double.valueOf(longString));
@@ -79,6 +46,39 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 	public Response exit() {
 		System.exit(0);
 		return Response.noContent().build();
+	}
+
+	@Override
+	public Response getAirport(String iata) {
+		AirportData airportData = AirportService.findAirportData(iata);
+		logger.debug(MessageFormat.format("Retrieved airport: \"{0}\"",
+				airportData));
+		return Response.status(Response.Status.OK).entity(airportData).build();
+	}
+
+	@Override
+	public Response getAirports() {
+		Set<String> airportKeys = AirportService.getAirportKeys();
+		logger.debug(MessageFormat.format(
+				"Retrieved airports with codes: \"{0}\"", airportKeys));
+		return Response.status(Response.Status.OK).entity(airportKeys).build();
+	}
+
+	@Override
+	public Response ping() {
+		return Response.status(Response.Status.OK).entity("ready").build();
+	}
+
+	@Override
+	public Response updateWeather(String iataCode, String pointType,
+			String datapointJson) {
+		try {
+			WeatherService.addDataPoint(iataCode, pointType,
+					new Gson().fromJson(datapointJson, DataPoint.class));
+		} catch (WeatherException e) {
+			logger.error(e.getMessage());
+		}
+		return Response.status(Response.Status.OK).build();
 	}
 
 }

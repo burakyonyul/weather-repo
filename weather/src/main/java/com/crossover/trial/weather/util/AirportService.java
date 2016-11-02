@@ -8,6 +8,13 @@ import java.util.Set;
 import com.crossover.trial.weather.pojo.AirportData;
 import com.crossover.trial.weather.pojo.AtmosphericInformation;
 
+/**
+ * This is the service class for airport related operations and containment of
+ * airports
+ * 
+ * @author burak
+ *
+ */
 public class AirportService {
 
 	/** all known airports */
@@ -35,31 +42,19 @@ public class AirportService {
 	 * @param longitude
 	 *            in degrees
 	 *
-	 * @return the added airport
 	 */
-	public static AirportData addAirport(String iataCode, double latitude,
+	public static void addAirport(String iataCode, double latitude,
 			double longitude) {
 
 		// create an airport data using specific constructor with required
 		// parameters
-		AirportData ad = new AirportData(iataCode, latitude, longitude);
+		AirportData airportData = new AirportData(iataCode, latitude, longitude);
 		// add into airport data list
-		airportMap.put(iataCode, ad);
-
+		airportMap.put(iataCode, airportData);
+		// add atmospheric information of the related airport to the weather
+		// service
 		WeatherService.addAtmosphericInformation(iataCode,
 				new AtmosphericInformation());
-		return ad;
-	}
-
-	/**
-	 * Given an iataCode find the airport data
-	 *
-	 * @param iataCode
-	 *            as a string
-	 * @return airport data or null if not found
-	 */
-	public static AirportData findAirportData(String iataCode) {
-		return airportMap.get(iataCode);
 	}
 
 	/**
@@ -82,6 +77,11 @@ public class AirportService {
 		return AirportService.EARTH_RADIUS_KM * c;
 	}
 
+	/**
+	 * Calculates frequencies of airports
+	 * 
+	 * @return frequency {@link Map} instance as <key = iata, value = frequency>
+	 */
 	public static Map<String, Double> calculateIataFrequency() {
 		Map<String, Double> freq = new HashMap<>();
 		// fraction of queries
@@ -93,16 +93,41 @@ public class AirportService {
 		return freq;
 	}
 
-	public static void updateAirportDataFrequency(String iata) {
-		// find airport data using iata code
-		AirportData airportData = AirportService.findAirportData(iata);
-		// update airport data
-		requestFrequency.put(airportData,
-				requestFrequency.getOrDefault(airportData, 0) + 1);
+	/**
+	 * Find according to iata and delete it
+	 * 
+	 * @param iata
+	 * @return deleted {@link AirportData} instance
+	 */
+	public static AirportData deleteAirport(String iata) {
+		// remove airport data from map
+		AirportData removedAirport = airportMap.remove(iata);
+		// remove atmospheric information
+		WeatherService.removeAtmosphericInfo(iata);
+		return removedAirport;
+	}
+
+	/**
+	 * Given an iataCode find the airport data
+	 *
+	 * @param iataCode
+	 *            as a string
+	 * @return airport data or null if not found
+	 */
+	public static AirportData findAirportData(String iataCode) {
+		return airportMap.get(iataCode);
 	}
 
 	public static int getAirportDataSize() {
 		return airportMap.size();
+	}
+
+	public static Set<String> getAirportKeys() {
+		return airportMap.keySet();
+	}
+
+	public static Collection<AirportData> getAirportValues() {
+		return airportMap.values();
 	}
 
 	public static void init() {
@@ -119,25 +144,17 @@ public class AirportService {
 	}
 
 	/**
-	 * Find according to iata and delete it
+	 * Update frequency of airport with given iata code value
 	 * 
 	 * @param iata
-	 * @return
+	 *            iata code of an airport
 	 */
-	public static AirportData deleteAirport(String iata) {
-		// remove airport data from map
-		AirportData removedAirport = airportMap.remove(iata);
-		// remove atmospheric information
-		WeatherService.removeAtmosphericInfo(iata);
-		return removedAirport;
-	}
-
-	public static Set<String> getAirportKeys() {
-		return airportMap.keySet();
-	}
-
-	public static Collection<AirportData> getAirportValues() {
-		return airportMap.values();
+	public static void updateAirportDataFrequency(String iata) {
+		// find airport data using iata code
+		AirportData airportData = AirportService.findAirportData(iata);
+		// update airport data
+		requestFrequency.put(airportData,
+				requestFrequency.getOrDefault(airportData, 0) + 1);
 	}
 
 }

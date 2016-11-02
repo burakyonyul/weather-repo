@@ -42,66 +42,66 @@ public class AtmosphericInformation {
 		this.lastUpdateTime = System.currentTimeMillis();
 	}
 
-	public DataPoint getTemperature() {
-		return temperature;
-	}
-
-	public void setTemperature(DataPoint temperature) {
-		this.temperature = temperature;
-	}
-
-	public DataPoint getWind() {
-		return wind;
-	}
-
-	public void setWind(DataPoint wind) {
-		this.wind = wind;
+	public DataPoint getCloudCover() {
+		return cloudCover;
 	}
 
 	public DataPoint getHumidity() {
 		return humidity;
 	}
 
-	public void setHumidity(DataPoint humidity) {
-		this.humidity = humidity;
+	public long getLastUpdateTime() {
+		return this.lastUpdateTime;
 	}
 
 	public DataPoint getPrecipitation() {
 		return precipitation;
 	}
 
-	public void setPrecipitation(DataPoint precipitation) {
-		this.precipitation = precipitation;
-	}
-
 	public DataPoint getPressure() {
 		return pressure;
 	}
 
-	public void setPressure(DataPoint pressure) {
-		this.pressure = pressure;
+	public DataPoint getTemperature() {
+		return temperature;
 	}
 
-	public DataPoint getCloudCover() {
-		return cloudCover;
-	}
-
-	public void setCloudCover(DataPoint cloudCover) {
-		this.cloudCover = cloudCover;
-	}
-
-	public long getLastUpdateTime() {
-		return this.lastUpdateTime;
-	}
-
-	public void setLastUpdateTime(long lastUpdateTime) {
-		this.lastUpdateTime = lastUpdateTime;
+	public DataPoint getWind() {
+		return wind;
 	}
 
 	public boolean hasAnyDataPointValue() {
 		return this.cloudCover != null || this.humidity != null
 				|| this.pressure != null || this.precipitation != null
 				|| this.temperature != null || this.wind != null;
+	}
+
+	public void setCloudCover(DataPoint cloudCover) {
+		this.cloudCover = cloudCover;
+	}
+
+	public void setHumidity(DataPoint humidity) {
+		this.humidity = humidity;
+	}
+
+	public void setLastUpdateTime(long lastUpdateTime) {
+		this.lastUpdateTime = lastUpdateTime;
+	}
+
+	public void setPrecipitation(DataPoint precipitation) {
+		this.precipitation = precipitation;
+	}
+
+	public void setPressure(DataPoint pressure) {
+		this.pressure = pressure;
+	}
+
+	public void setTemperature(DataPoint temperature) {
+		this.temperature = temperature;
+	}
+
+	public void setWind(DataPoint wind) {
+		this.wind = wind;
 	}
 
 	@Override

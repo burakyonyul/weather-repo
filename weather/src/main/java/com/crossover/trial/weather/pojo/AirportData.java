@@ -25,6 +25,14 @@ public class AirportData {
 		this.longitude = longitude;
 	}
 
+	public boolean equals(Object other) {
+		if (other instanceof AirportData) {
+			return ((AirportData) other).getIata().equals(this.getIata());
+		}
+
+		return false;
+	}
+
 	public String getIata() {
 		return iata;
 	}
@@ -40,13 +48,5 @@ public class AirportData {
 	public String toString() {
 		return ReflectionToStringBuilder.toString(this,
 				ToStringStyle.NO_CLASS_NAME_STYLE);
-	}
-
-	public boolean equals(Object other) {
-		if (other instanceof AirportData) {
-			return ((AirportData) other).getIata().equals(this.getIata());
-		}
-
-		return false;
 	}
 }

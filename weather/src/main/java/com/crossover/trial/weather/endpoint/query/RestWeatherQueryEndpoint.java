@@ -44,6 +44,14 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 	}
 
 	/**
+	 * A dummy init method that loads hard coded data
+	 */
+	public static void init() {
+		WeatherService.init();
+		AirportService.init();
+	}
+
+	/**
 	 * Retrieve service health including total size of valid data points and
 	 * request frequency information.
 	 *
@@ -155,14 +163,6 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 		AirportService.updateAirportDataFrequency(iata);
 		WeatherService.updateRadiusDataFrequency(radius);
 		logger.debug("Request Frequency has been updated!");
-	}
-
-	/**
-	 * A dummy init method that loads hard coded data
-	 */
-	public static void init() {
-		WeatherService.init();
-		AirportService.init();
 	}
 
 }
