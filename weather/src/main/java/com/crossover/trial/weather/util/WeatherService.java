@@ -1,8 +1,8 @@
 package com.crossover.trial.weather.util;
 
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.pojo.AtmosphericInformation;
@@ -123,7 +123,10 @@ public class WeatherService {
 			updatePrecipitation(dp, ai);
 			return;
 		default: {
-			throw new IllegalStateException("couldn't update atmospheric data");
+			throw new WeatherException(
+					MessageFormat
+							.format("couldn't update atmospheric data because of data point type mismatch with value: \"{0}\"",
+									pointType));
 		}
 		}
 

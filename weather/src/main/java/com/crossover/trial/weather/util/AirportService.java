@@ -26,7 +26,7 @@ public class AirportService {
 	private static final double EARTH_RADIUS_KM = 6372.8;
 
 	/**
-	 * Add a new known airport to our list.
+	 * Add a new known airport to the airport map.
 	 *
 	 * @param iataCode
 	 *            3 letter code
@@ -109,6 +109,8 @@ public class AirportService {
 		airportMap.clear();
 		requestFrequency.clear();
 
+		// TODO: this should be removed for real use afterwards
+		// add statically 5 airports to the map
 		addAirport("BOS", 42.364347, -71.005181);
 		addAirport("EWR", 40.6925, -74.168667);
 		addAirport("JFK", 40.639751, -73.778925);
@@ -120,7 +122,7 @@ public class AirportService {
 	 * Find according to iata and delete it
 	 * 
 	 * @param iata
-	 * @return 
+	 * @return
 	 */
 	public static AirportData deleteAirport(String iata) {
 		// remove airport data from map
