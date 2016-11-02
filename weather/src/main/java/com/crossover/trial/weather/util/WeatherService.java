@@ -12,14 +12,24 @@ import com.crossover.trial.weather.pojo.DataPointType;
 public class WeatherService {
 
 	private static final int DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
+
 	/**
 	 * atmospheric information for each airport, idx corresponds with
 	 * airportData
 	 */
 	private static Map<String, AtmosphericInformation> atmosphericInformationMap = new HashMap<String, AtmosphericInformation>();
-	private static Map<Double, Integer> radiusFreq = new HashMap<Double, Integer>();
 
-	public static int calculateRadiusFrequency() {
+	/**
+	 * radius frequency map
+	 */
+	private static Map<Double, Integer> radiusFrequencyMap = new HashMap<Double, Integer>();
+
+	/**
+	 * This method calculates data size using atmoshpheric information map
+	 * 
+	 * @return
+	 */
+	public static int calculateDataSize() {
 		int datasize = 0;
 		for (AtmosphericInformation ai : atmosphericInformationMap.values()) {
 			// we only count recent readings and updated in the last day
@@ -36,13 +46,22 @@ public class WeatherService {
 	}
 
 	public static void updateRadiusDataFrequency(Double radius) {
-		radiusFreq.put(radius, radiusFreq.getOrDefault(radius, 0));
+		radiusFrequencyMap.put(radius,
+				radiusFrequencyMap.getOrDefault(radius, 0));
 	}
 
 	public static void init() {
 		atmosphericInformationMap.clear();
 	}
 
+	/**
+	 * Returns {@link AtmosphericInformation} value from map according to given
+	 * iata key
+	 * 
+	 * @param iata
+	 *            iata code given
+	 * @return {@link AtmosphericInformation} value
+	 */
 	public static AtmosphericInformation getAtmosphericInformation(String iata) {
 		return atmosphericInformationMap.get(iata);
 	}
@@ -66,8 +85,8 @@ public class WeatherService {
 	 */
 	public static void addDataPoint(String iataCode, String pointType,
 			DataPoint dp) throws WeatherException {
-		WeatherService.updateAtmosphericInformation(
-				getAtmosphericInformation(iataCode), pointType, dp);
+		WeatherService.updateWeather(getAtmosphericInformation(iataCode),
+				pointType, dp);
 	}
 
 	/**
@@ -81,7 +100,7 @@ public class WeatherService {
 	 * @param dp
 	 *            the actual data point
 	 */
-	public static void updateAtmosphericInformation(AtmosphericInformation ai,
+	public static void updateWeather(AtmosphericInformation ai,
 			String pointType, DataPoint dp) throws WeatherException {
 
 		switch (DataPointType.valueOf(pointType.toUpperCase())) {
@@ -110,47 +129,93 @@ public class WeatherService {
 
 	}
 
-	private static void updatePressure(DataPoint dp, AtmosphericInformation ai) {
-		if (dp.getMean() >= 650 && dp.getMean() < 800) {
-			ai.setPressure(dp);
-			ai.setLastUpdateTime(System.currentTimeMillis());
+	/**
+	 * Updates pressure value of {@link AtmosphericInformation} given by
+	 * checking mean value of given data point
+	 * 
+	 * @param dataPoint
+	 * @param atmInfo
+	 */
+	private static void updatePressure(DataPoint dataPoint,
+			AtmosphericInformation atmInfo) {
+		if (dataPoint.getMean() >= 650 && dataPoint.getMean() < 800) {
+			atmInfo.setPressure(dataPoint);
+			atmInfo.setLastUpdateTime(System.currentTimeMillis());
 		}
 	}
 
-	private static void updatePrecipitation(DataPoint dp,
-			AtmosphericInformation ai) {
-		if (dp.getMean() >= 0 && dp.getMean() < 100) {
-			ai.setPrecipitation(dp);
-			ai.setLastUpdateTime(System.currentTimeMillis());
+	/**
+	 * Updates precipitation value of {@link AtmosphericInformation} given by
+	 * checking mean value of given data point
+	 * 
+	 * @param dataPoint
+	 * @param atmInfo
+	 */
+	private static void updatePrecipitation(DataPoint dataPoint,
+			AtmosphericInformation atmInfo) {
+		if (dataPoint.getMean() >= 0 && dataPoint.getMean() < 100) {
+			atmInfo.setPrecipitation(dataPoint);
+			atmInfo.setLastUpdateTime(System.currentTimeMillis());
 		}
 	}
 
-	private static void updateCloudOver(DataPoint dp, AtmosphericInformation ai) {
-		if (dp.getMean() >= 0 && dp.getMean() < 100) {
-			ai.setCloudCover(dp);
-			ai.setLastUpdateTime(System.currentTimeMillis());
+	/**
+	 * Updates cloud cover value of {@link AtmosphericInformation} given by
+	 * checking mean value of given data point
+	 * 
+	 * @param dataPoint
+	 * @param atmInfo
+	 */
+	private static void updateCloudOver(DataPoint dataPoint,
+			AtmosphericInformation atmInfo) {
+		if (dataPoint.getMean() >= 0 && dataPoint.getMean() < 100) {
+			atmInfo.setCloudCover(dataPoint);
+			atmInfo.setLastUpdateTime(System.currentTimeMillis());
 		}
 	}
 
-	private static void updateHumidity(DataPoint dp, AtmosphericInformation ai) {
-		if (dp.getMean() >= 0 && dp.getMean() < 100) {
-			ai.setHumidity(dp);
-			ai.setLastUpdateTime(System.currentTimeMillis());
+	/**
+	 * Updates humidity value of {@link AtmosphericInformation} given by
+	 * checking mean value of given data point
+	 * 
+	 * @param dataPoint
+	 * @param atmInfo
+	 */
+	private static void updateHumidity(DataPoint dataPoint,
+			AtmosphericInformation atmInfo) {
+		if (dataPoint.getMean() >= 0 && dataPoint.getMean() < 100) {
+			atmInfo.setHumidity(dataPoint);
+			atmInfo.setLastUpdateTime(System.currentTimeMillis());
 		}
 	}
 
-	private static void updateTemperature(DataPoint dp,
-			AtmosphericInformation ai) {
-		if (dp.getMean() >= -50 && dp.getMean() < 100) {
-			ai.setTemperature(dp);
-			ai.setLastUpdateTime(System.currentTimeMillis());
+	/**
+	 * Updates temperature value of {@link AtmosphericInformation} given by
+	 * checking mean value of given data point
+	 * 
+	 * @param dataPoint
+	 * @param atmInfo
+	 */
+	private static void updateTemperature(DataPoint dataPoint,
+			AtmosphericInformation atmInfo) {
+		if (dataPoint.getMean() >= -50 && dataPoint.getMean() < 100) {
+			atmInfo.setTemperature(dataPoint);
+			atmInfo.setLastUpdateTime(System.currentTimeMillis());
 		}
 	}
 
-	private static void updateWind(DataPoint dp, AtmosphericInformation ai) {
-		if (dp.getMean() >= 0) {
-			ai.setWind(dp);
-			ai.setLastUpdateTime(System.currentTimeMillis());
+	/**
+	 * Updates wind value of {@link AtmosphericInformation} given by checking
+	 * mean value of given data point
+	 * 
+	 * @param dataPoint
+	 * @param atmInfo
+	 */
+	private static void updateWind(DataPoint dataPoint,
+			AtmosphericInformation atmInfo) {
+		if (dataPoint.getMean() >= 0) {
+			atmInfo.setWind(dataPoint);
+			atmInfo.setLastUpdateTime(System.currentTimeMillis());
 		}
 	}
 
@@ -159,12 +224,17 @@ public class WeatherService {
 		atmosphericInformationMap.put(iataCode, atmosphericInformation);
 	}
 
-	public static int[] calculateDatasize() {
-		int m = radiusFreq.keySet().stream().max(Double::compare)
+	/**
+	 * This method calculate radius frequencies
+	 * 
+	 * @return calculated radius frequency map
+	 */
+	public static int[] calculateRadiusFrequency() {
+		int max = radiusFrequencyMap.keySet().stream().max(Double::compare)
 				.orElse(1000.0).intValue() + 1;
 
-		int[] hist = new int[m];
-		for (Map.Entry<Double, Integer> e : radiusFreq.entrySet()) {
+		int[] hist = new int[max];
+		for (Map.Entry<Double, Integer> e : radiusFrequencyMap.entrySet()) {
 			int i = e.getKey().intValue() % 10;
 			hist[i] += e.getValue();
 		}

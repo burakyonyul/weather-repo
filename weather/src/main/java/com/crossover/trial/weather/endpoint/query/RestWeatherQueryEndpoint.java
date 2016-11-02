@@ -50,11 +50,11 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 	public String ping() {
 		Map<String, Object> retval = new HashMap<>();
 
-		retval.put(DATASIZE, WeatherService.calculateRadiusFrequency());
+		retval.put(DATASIZE, WeatherService.calculateDataSize());
 
 		retval.put(IATA_FREQ, AirportService.calculateIataFrequency());
 
-		retval.put(RADIUS_FREQ, WeatherService.calculateDatasize());
+		retval.put(RADIUS_FREQ, WeatherService.calculateRadiusFrequency());
 
 		return gson.toJson(retval);
 	}
@@ -73,30 +73,48 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 	 */
 	@Override
 	public Response weather(String iata, String radiusString) {
-		double radius = radiusString == null || radiusString.trim().isEmpty() ? 0
-				: Double.valueOf(radiusString);
+		// get radius from parameter
+		double radius = getRadiusValue(radiusString);
+		// update request frequency using iata and radius
 		updateRequestFrequency(iata, radius);
-
-		List<AtmosphericInformation> retval = new ArrayList<AtmosphericInformation>();
+		// define list of atmospheric information
+		List<AtmosphericInformation> atmInfoList = new ArrayList<AtmosphericInformation>();
+		// fill atmospheric information list
 		if (radius == 0) {
-			retval.add(WeatherService.getAtmosphericInformation(iata));
+			atmInfoList.add(WeatherService.getAtmosphericInformation(iata));
 		} else {
-			AirportData ad = AirportService.findAirportData(iata);
-			for (AirportData data : AirportService.getAirportValues()) {
-				if (AirportService.calculateDistance(ad, data) <= radius) {
-					AtmosphericInformation ai = WeatherService
-							.getAtmosphericInformation(data.getIata());
-					if (ai.getCloudCover() != null || ai.getHumidity() != null
-							|| ai.getPrecipitation() != null
-							|| ai.getPressure() != null
-							|| ai.getTemperature() != null
-							|| ai.getWind() != null) {
-						retval.add(ai);
+			// get airport data value from iata code
+			AirportData referenceAirportData = AirportService
+					.findAirportData(iata);
+			// iterate on airport values
+			for (AirportData currentData : AirportService.getAirportValues()) {
+				if (AirportService.calculateDistance(referenceAirportData,
+						currentData) <= radius) {
+					// get atmospheric information
+					AtmosphericInformation atmInfo = WeatherService
+							.getAtmosphericInformation(currentData.getIata());
+					// add atmospheric information to the list if it has any
+					// data point value
+					if (atmInfo.hasAnyDataPointValue()) {
+						atmInfoList.add(atmInfo);
 					}
 				}
 			}
 		}
-		return Response.status(Response.Status.OK).entity(retval).build();
+		return Response.status(Response.Status.OK).entity(atmInfoList).build();
+	}
+
+	/**
+	 * get {@link Double} type radius value from string
+	 * 
+	 * @param radiusString
+	 *            radius value in {@link String} type
+	 * @return radius value in {@link Double} type
+	 */
+	private double getRadiusValue(String radiusString) {
+		double radius = radiusString == null || radiusString.trim().isEmpty() ? 0
+				: Double.valueOf(radiusString);
+		return radius;
 	}
 
 	/**

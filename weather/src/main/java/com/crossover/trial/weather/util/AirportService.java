@@ -120,13 +120,14 @@ public class AirportService {
 	 * Find according to iata and delete it
 	 * 
 	 * @param iata
+	 * @return 
 	 */
-	public static void deleteAirport(String iata) {
+	public static AirportData deleteAirport(String iata) {
 		// remove airport data from map
-		airportMap.remove(iata);
+		AirportData removedAirport = airportMap.remove(iata);
 		// remove atmospheric information
 		WeatherService.removeAtmosphericInfo(iata);
-		return;
+		return removedAirport;
 	}
 
 	public static Set<String> getAirportKeys() {

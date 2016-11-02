@@ -3,7 +3,6 @@ package com.crossover.trial.weather.endpoint.collector;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
 import com.crossover.trial.weather.exception.WeatherException;
@@ -51,7 +50,8 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 	@Override
 	public Response getAirport(String iata) {
 		AirportData ad = AirportService.findAirportData(iata);
-		return Response.status(Response.Status.OK).entity(ad).build();
+		return Response.status(Response.Status.OK).entity(ad.toString())
+				.build();
 	}
 
 	@Override
