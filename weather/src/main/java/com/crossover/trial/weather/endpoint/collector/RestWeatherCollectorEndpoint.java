@@ -1,9 +1,12 @@
 package com.crossover.trial.weather.endpoint.collector;
 
-import java.util.logging.Logger;
+import java.text.MessageFormat;
+import java.util.Set;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+
+import org.apache.log4j.Logger;
 
 import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.pojo.AirportData;
@@ -21,8 +24,8 @@ import com.google.gson.Gson;
 
 @Path("/collect")
 public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
-	public final static Logger LOGGER = Logger
-			.getLogger(RestWeatherCollectorEndpoint.class.getName());
+	public final static Logger logger = Logger
+			.getLogger(RestWeatherCollectorEndpoint.class);
 
 	@Override
 	public Response ping() {
@@ -36,22 +39,25 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 			WeatherService.addDataPoint(iataCode, pointType,
 					new Gson().fromJson(datapointJson, DataPoint.class));
 		} catch (WeatherException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 		return Response.status(Response.Status.OK).build();
 	}
 
 	@Override
 	public Response getAirports() {
-		return Response.status(Response.Status.OK)
-				.entity(AirportService.getAirportKeys()).build();
+		Set<String> airportKeys = AirportService.getAirportKeys();
+		logger.debug(MessageFormat.format(
+				"Retrieved airports with codes: \"{0}\"", airportKeys));
+		return Response.status(Response.Status.OK).entity(airportKeys).build();
 	}
 
 	@Override
 	public Response getAirport(String iata) {
-		AirportData ad = AirportService.findAirportData(iata);
-		return Response.status(Response.Status.OK).entity(ad.toString())
-				.build();
+		AirportData airportData = AirportService.findAirportData(iata);
+		logger.debug(MessageFormat.format("Retrieved airport: \"{0}\"",
+				airportData));
+		return Response.status(Response.Status.OK).entity(airportData).build();
 	}
 
 	@Override
@@ -63,8 +69,10 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 
 	@Override
 	public Response deleteAirport(String iata) {
-		AirportService.deleteAirport(iata);
-		return Response.status(Response.Status.OK).build();
+		AirportData airportData = AirportService.deleteAirport(iata);
+		logger.debug(MessageFormat.format("Deleted airport: \"{0}\"",
+				airportData));
+		return Response.status(Response.Status.OK).entity(airportData).build();
 	}
 
 	@Override

@@ -103,4 +103,13 @@ public class AtmosphericInformation {
 				|| this.pressure != null || this.precipitation != null
 				|| this.temperature != null || this.wind != null;
 	}
+
+	@Override
+	public String toString() {
+		return "AtmosphericInformation [temperature=" + temperature + ", wind="
+				+ wind + ", humidity=" + humidity + ", precipitation="
+				+ precipitation + ", pressure=" + pressure + ", cloudCover="
+				+ cloudCover + ", lastUpdateTime=" + lastUpdateTime + "]";
+	}
+
 }

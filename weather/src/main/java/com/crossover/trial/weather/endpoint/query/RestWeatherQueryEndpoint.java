@@ -1,13 +1,15 @@
 package com.crossover.trial.weather.endpoint.query;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+
+import org.apache.log4j.Logger;
 
 import com.crossover.trial.weather.pojo.AirportData;
 import com.crossover.trial.weather.pojo.AtmosphericInformation;
@@ -20,7 +22,7 @@ import com.google.gson.Gson;
  * health stats. Currently, all data is held in memory. The end point deploys to
  * a single container
  *
- * @author code test administrator
+ * @author burak
  */
 @Path("/query")
 public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
@@ -31,7 +33,8 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
 	private static final String DATASIZE = "datasize";
 
-	private final static Logger LOGGER = Logger.getLogger("WeatherQuery");
+	private final static Logger logger = Logger
+			.getLogger(RestWeatherQueryEndpoint.class);
 
 	/** shared gson json to object factory */
 	public static final Gson gson = new Gson();
@@ -77,6 +80,25 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 		double radius = getRadiusValue(radiusString);
 		// update request frequency using iata and radius
 		updateRequestFrequency(iata, radius);
+		// build a list of atmospheric info for given iata and radius
+		List<AtmosphericInformation> atmInfoList = buildAtmosphericInfoList(
+				iata, radius);
+		return Response.status(Response.Status.OK).entity(atmInfoList).build();
+	}
+
+	/**
+	 * This method retrieves nearby atmospheric information for the airport with
+	 * the given iata code and using given radius
+	 * 
+	 * @param iata
+	 *            iata code of the airport to collect atmospheric information
+	 *            for
+	 * @param radius
+	 *            radius to get atmospheric information of nearby airports
+	 * @return {@link List} of {@link AtmosphericInformation}s
+	 */
+	private List<AtmosphericInformation> buildAtmosphericInfoList(String iata,
+			double radius) {
 		// define list of atmospheric information
 		List<AtmosphericInformation> atmInfoList = new ArrayList<AtmosphericInformation>();
 		// fill atmospheric information list
@@ -101,7 +123,10 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 				}
 			}
 		}
-		return Response.status(Response.Status.OK).entity(atmInfoList).build();
+		logger.debug(MessageFormat.format(
+				"Atmospheric information list has been consructed: \"{0}\"",
+				atmInfoList));
+		return atmInfoList;
 	}
 
 	/**
@@ -114,6 +139,7 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 	private double getRadiusValue(String radiusString) {
 		double radius = radiusString == null || radiusString.trim().isEmpty() ? 0
 				: Double.valueOf(radiusString);
+		logger.debug(MessageFormat.format("Radius value is: \"{0}\"", radius));
 		return radius;
 	}
 
@@ -128,6 +154,7 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 	private void updateRequestFrequency(String iata, Double radius) {
 		AirportService.updateAirportDataFrequency(iata);
 		WeatherService.updateRadiusDataFrequency(radius);
+		logger.debug("Request Frequency has been updated!");
 	}
 
 	/**
