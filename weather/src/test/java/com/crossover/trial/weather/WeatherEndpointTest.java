@@ -1,5 +1,17 @@
 package com.crossover.trial.weather;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+import java.util.Set;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.crossover.trial.weather.endpoint.collector.RestWeatherCollectorEndpoint;
 import com.crossover.trial.weather.endpoint.collector.WeatherCollectorEndpoint;
 import com.crossover.trial.weather.endpoint.query.RestWeatherQueryEndpoint;
@@ -7,20 +19,23 @@ import com.crossover.trial.weather.endpoint.query.WeatherQueryEndpoint;
 import com.crossover.trial.weather.pojo.AirportData;
 import com.crossover.trial.weather.pojo.AtmosphericInformation;
 import com.crossover.trial.weather.pojo.DataPoint;
+import com.crossover.trial.weather.util.AirportService;
+import com.crossover.trial.weather.util.WeatherService;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.*;
-
 public class WeatherEndpointTest {
+
+	private static final String IATA_FREQ = "iata_freq";
+
+	private static final String DATASIZE = "datasize";
+
+	private static final String CLOUDCOVER = "cloudcover";
+
+	private static final String WIND = "wind";
+
+	private static final String ZERO = "0";
 
 	private WeatherQueryEndpoint _query = new RestWeatherQueryEndpoint();
 
@@ -30,21 +45,60 @@ public class WeatherEndpointTest {
 
 	private DataPoint _dp;
 
+	private static final AirportData BOS = new AirportData("BOS", 42.364347,
+			-71.005181);
+	private static final AirportData EWR = new AirportData("EWR", 40.6925,
+			-74.168667);
+	private static final AirportData JFK = new AirportData("JFK", 40.639751,
+			-73.778925);
+	private static final AirportData LGA = new AirportData("LGA", 40.777245,
+			-73.872608);
+	private static final AirportData MMU = new AirportData("MMU", 40.79935,
+			-74.4148747);
+
 	@Before
 	public void setUp() throws Exception {
-		RestWeatherQueryEndpoint.init();
+
+		// initialize airport service
+		initializeAirportService();
+		// create a sample datapoint
 		_dp = new DataPoint.Builder().withCount(10).withFirst(10)
 				.withMedian(20).withLast(30).withMean(22).build();
-		_update.updateWeather("BOS", "wind", _gson.toJson(_dp));
-		_query.weather("BOS", "0").getEntity();
+		// update weather using iata code of BOS airport
+		_update.updateWeather(BOS.getIata(), WIND, _gson.toJson(_dp));
+		// get weather data matching with BOS airport
+		_query.weather(BOS.getIata(), ZERO).getEntity();
+	}
+
+	@After
+	public void tearDown() {
+		// clear contents of the service
+		AirportService.clear();
+		WeatherService.clear();
+	}
+
+	/**
+	 * initializes AirportService by adding 5 sample airport data
+	 */
+	private void initializeAirportService() {
+		AirportService.addAirport(BOS.getIata(), BOS.getLatitude(),
+				BOS.getLongitude());
+		AirportService.addAirport(EWR.getIata(), EWR.getLatitude(),
+				EWR.getLongitude());
+		AirportService.addAirport(JFK.getIata(), JFK.getLatitude(),
+				JFK.getLongitude());
+		AirportService.addAirport(LGA.getIata(), LGA.getLatitude(),
+				LGA.getLongitude());
+		AirportService.addAirport(MMU.getIata(), MMU.getLatitude(),
+				MMU.getLongitude());
 	}
 
 	@Test
 	public void testPing() throws Exception {
 		String ping = _query.ping();
 		JsonElement pingResult = new JsonParser().parse(ping);
-		assertEquals(1, pingResult.getAsJsonObject().get("datasize").getAsInt());
-		assertEquals(5, pingResult.getAsJsonObject().get("iata_freq")
+		assertEquals(1, pingResult.getAsJsonObject().get(DATASIZE).getAsInt());
+		assertEquals(5, pingResult.getAsJsonObject().get(IATA_FREQ)
 				.getAsJsonObject().entrySet().size());
 	}
 
@@ -52,22 +106,24 @@ public class WeatherEndpointTest {
 	public void testGet() throws Exception {
 		@SuppressWarnings("unchecked")
 		List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query
-				.weather("BOS", "0").getEntity();
+				.weather(BOS.getIata(), ZERO).getEntity();
 		assertEquals(ais.get(0).getWind(), _dp);
 	}
 
 	@Test
 	public void testGetNearby() throws Exception {
-		// check datasize response
-		_update.updateWeather("JFK", "wind", _gson.toJson(_dp));
+		// first update weather of JFK, EWR and LGA airports appropriately
+		_update.updateWeather(JFK.getIata(), WIND, _gson.toJson(_dp));
 		_dp.setMean(40);
-		_update.updateWeather("EWR", "wind", _gson.toJson(_dp));
+		_update.updateWeather(EWR.getIata(), WIND, _gson.toJson(_dp));
 		_dp.setMean(30);
-		_update.updateWeather("LGA", "wind", _gson.toJson(_dp));
+		_update.updateWeather(LGA.getIata(), WIND, _gson.toJson(_dp));
 
+		// request weather info related to JFK airports
 		@SuppressWarnings("unchecked")
 		List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query
-				.weather("JFK", "200").getEntity();
+				.weather(JFK.getIata(), "200").getEntity();
+		// check datasize response
 		assertEquals(3, ais.size());
 	}
 
@@ -76,21 +132,22 @@ public class WeatherEndpointTest {
 
 		DataPoint windDp = new DataPoint.Builder().withCount(10).withFirst(10)
 				.withMedian(20).withLast(30).withMean(22).build();
-		_update.updateWeather("BOS", "wind", _gson.toJson(windDp));
-		_query.weather("BOS", "0").getEntity();
+		_update.updateWeather(BOS.getIata(), WIND, _gson.toJson(windDp));
+		_query.weather(BOS.getIata(), ZERO).getEntity();
 
 		String ping = _query.ping();
 		JsonElement pingResult = new JsonParser().parse(ping);
-		assertEquals(1, pingResult.getAsJsonObject().get("datasize").getAsInt());
+		assertEquals(1, pingResult.getAsJsonObject().get(DATASIZE).getAsInt());
 
 		DataPoint cloudCoverDp = new DataPoint.Builder().withCount(4)
 				.withFirst(10).withMedian(60).withLast(100).withMean(50)
 				.build();
-		_update.updateWeather("BOS", "cloudcover", _gson.toJson(cloudCoverDp));
+		_update.updateWeather(BOS.getIata(), CLOUDCOVER,
+				_gson.toJson(cloudCoverDp));
 
 		@SuppressWarnings("unchecked")
 		List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query
-				.weather("BOS", "0").getEntity();
+				.weather(BOS.getIata(), ZERO).getEntity();
 		assertEquals(ais.get(0).getWind(), windDp);
 		assertEquals(ais.get(0).getCloudCover(), cloudCoverDp);
 	}
@@ -157,9 +214,13 @@ public class WeatherEndpointTest {
 	@Test
 	public void testGetAllAirports() throws Exception {
 
+		// clear all data contained in Airport and Weather services for exact
+		// control of get all airports service
+		tearDown();
+
 		// create two sample airport data
-		AirportData firstAirport = new AirportData("AEE", 28.7565, -45.5859);
-		AirportData secondAirport = new AirportData("BCD", -15.5859, 21.7565);
+		AirportData ADB = new AirportData("ADB", 38.4225, 27.155);
+		AirportData SAW = new AirportData("SAW", 40.898333, 29.309167);
 
 		// get all airports
 		@SuppressWarnings("unchecked")
@@ -168,19 +229,16 @@ public class WeatherEndpointTest {
 
 		// check the set is not null
 		assertNotNull(airportCodesBefore);
-		// assert first airport list size is 5 because of creating 5 airports
-		// internally
-		assertEquals(5, airportCodesBefore.size());
+		// check if retrieved airport code list is empty
+		assertTrue(airportCodesBefore.isEmpty());
 
 		// add first airport
-		_update.addAirport(firstAirport.getIata(),
-				String.valueOf(firstAirport.getLatitude()),
-				String.valueOf(firstAirport.getLongitude()));
+		_update.addAirport(ADB.getIata(), String.valueOf(ADB.getLatitude()),
+				String.valueOf(ADB.getLongitude()));
 
 		// add second airport
-		_update.addAirport(secondAirport.getIata(),
-				String.valueOf(secondAirport.getLatitude()),
-				String.valueOf(secondAirport.getLongitude()));
+		_update.addAirport(SAW.getIata(), String.valueOf(SAW.getLatitude()),
+				String.valueOf(SAW.getLongitude()));
 
 		@SuppressWarnings("unchecked")
 		Set<String> airportCodesAfter = (Set<String>) _update.getAirports()
@@ -188,7 +246,11 @@ public class WeatherEndpointTest {
 		// check the set is not null
 		assertNotNull(airportCodesAfter);
 		// check the size of the list has increased by two
-		assertEquals(7, airportCodesAfter.size());
+		assertEquals(2, airportCodesAfter.size());
+		// check if first and second airport iata codes are contained by after
+		// code list
+		assertTrue(airportCodesAfter.contains(ADB.getIata()));
+		assertTrue(airportCodesAfter.contains(SAW.getIata()));
 	}
 
 }

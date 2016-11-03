@@ -33,6 +33,16 @@ public class WeatherService {
 	private static Map<Double, Integer> radiusFrequencyMap = new HashMap<Double, Integer>();
 
 	/**
+	 * datasize naming constant
+	 */
+	public static final String DATASIZE = "datasize";
+
+	/**
+	 * radius frequency naming constant
+	 */
+	public static final String RADIUS_FREQ = "radius_freq";
+
+	/**
 	 * This method puts given {@link AtmosphericInformation} value to the map
 	 * for given iataCode as the key
 	 * 
@@ -112,10 +122,11 @@ public class WeatherService {
 	}
 
 	/**
-	 * initializes map
+	 * clears the contents of the maps
 	 */
-	public static void init() {
+	public static void clear() {
 		atmosphericInformationMap.clear();
+		radiusFrequencyMap.clear();
 	}
 
 	/**

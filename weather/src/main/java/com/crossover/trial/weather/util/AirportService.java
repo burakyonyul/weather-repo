@@ -33,6 +33,11 @@ public class AirportService {
 	private static final double EARTH_RADIUS_KM = 6372.8;
 
 	/**
+	 * iata frequency naming constant
+	 */
+	public static final String IATA_FREQ = "iata_freq";
+
+	/**
 	 * Add a new known airport to the airport map.
 	 *
 	 * @param iataCode
@@ -130,17 +135,12 @@ public class AirportService {
 		return airportMap.values();
 	}
 
-	public static void init() {
+	/**
+	 * clears the content of the maps
+	 */
+	public static void clear() {
 		airportMap.clear();
 		requestFrequency.clear();
-
-		// TODO: this should be removed for real use afterwards
-		// add statically 5 airports to the map
-		addAirport("BOS", 42.364347, -71.005181);
-		addAirport("EWR", 40.6925, -74.168667);
-		addAirport("JFK", 40.639751, -73.778925);
-		addAirport("LGA", 40.777245, -73.872608);
-		addAirport("MMU", 40.79935, -74.4148747);
 	}
 
 	/**

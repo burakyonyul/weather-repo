@@ -19,7 +19,7 @@ import com.google.gson.Gson;
  * A REST implementation of the WeatherCollector API. Accessible only to airport
  * weather collection sites via secure VPN.
  *
- * @author code test administrator
+ * @author burak
  */
 
 @Path("/collect")

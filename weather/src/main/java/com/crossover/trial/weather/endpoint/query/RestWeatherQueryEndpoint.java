@@ -27,29 +27,11 @@ import com.google.gson.Gson;
 @Path("/query")
 public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
-	private static final String RADIUS_FREQ = "radius_freq";
-
-	private static final String IATA_FREQ = "iata_freq";
-
-	private static final String DATASIZE = "datasize";
-
 	private final static Logger logger = Logger
 			.getLogger(RestWeatherQueryEndpoint.class);
 
 	/** shared gson json to object factory */
-	public static final Gson gson = new Gson();
-
-	static {
-		RestWeatherQueryEndpoint.init();
-	}
-
-	/**
-	 * A dummy init method that loads hard coded data
-	 */
-	public static void init() {
-		WeatherService.init();
-		AirportService.init();
-	}
+	private static final Gson gson = new Gson();
 
 	/**
 	 * Retrieve service health including total size of valid data points and
@@ -61,11 +43,13 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 	public String ping() {
 		Map<String, Object> retval = new HashMap<>();
 
-		retval.put(DATASIZE, WeatherService.calculateDataSize());
+		retval.put(WeatherService.DATASIZE, WeatherService.calculateDataSize());
 
-		retval.put(IATA_FREQ, AirportService.calculateIataFrequency());
+		retval.put(AirportService.IATA_FREQ,
+				AirportService.calculateIataFrequency());
 
-		retval.put(RADIUS_FREQ, WeatherService.calculateRadiusFrequency());
+		retval.put(WeatherService.RADIUS_FREQ,
+				WeatherService.calculateRadiusFrequency());
 
 		return gson.toJson(retval);
 	}
