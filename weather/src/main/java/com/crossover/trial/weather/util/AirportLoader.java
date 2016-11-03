@@ -14,13 +14,14 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Logger;
+
 /**
  * A simple airport loader which reads a file from disk and sends entries to the
  * webservice
  *
- * TODO: Implement the Airport Loader
  * 
- * @author code test administrator
+ * @author burak
  */
 public class AirportLoader {
 
@@ -38,6 +39,8 @@ public class AirportLoader {
 	private static final String DOUBLE_QUOTE = "\"";
 
 	private static final String COMMA = ",";
+
+	private static final Logger logger = Logger.getLogger(AirportLoader.class);
 
 	/** end point for read queries */
 	private WebTarget query;
@@ -59,19 +62,31 @@ public class AirportLoader {
 			System.exit(1);
 		}
 
-		AirportLoader al = new AirportLoader();
-		al.upload(new FileInputStream(airportDataFile));
+		AirportLoader airportLoader = new AirportLoader();
+		airportLoader.upload(new FileInputStream(airportDataFile));
 		System.exit(0);
 	}
 
+	/**
+	 * This method reads lines in given {@link FileInputStream} and parses them
+	 * appropriately to get "iataCode", "latitude", and "longitude" values. Then
+	 * it sends a POST request to collector end-point with "addAirport URL" for
+	 * adding a new airport to the {@link AirportService}
+	 * 
+	 * @param airportDataStream
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	public void upload(InputStream airportDataStream) throws IOException,
 			InterruptedException, ExecutionException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(
 				airportDataStream));
-		String l = null;
-		while ((l = reader.readLine()) != null) {
+		String line = null;
+		boolean hasAnyLine = false;
+		while ((line = reader.readLine()) != null) {
 			// split comma-separated line into pieces
-			String[] linePieces = l.split(COMMA);
+			String[] linePieces = line.split(COMMA);
 			// check if current line is complete as given in the example
 			// airports.dat file
 			if (linePieces.length == DEFAULT_DATA_SIZE) {
@@ -85,8 +100,11 @@ public class AirportLoader {
 				iataCode = extractExactIataCode(iataCode).trim();
 				// sends request to collector endpoint to add a new airport
 				sendAddAirportRequest(iataCode, latitude, longitude);
+				hasAnyLine = true;
 			}
 		}
+		// log upload result
+		logResult(hasAnyLine);
 	}
 
 	/**
@@ -101,6 +119,19 @@ public class AirportLoader {
 			iataCode = iataCode.substring(1, iataCode.length() - 1);
 		}
 		return iataCode;
+	}
+
+	/**
+	 * Logs the result of upload
+	 * 
+	 * @param hasAnyLine
+	 */
+	private void logResult(boolean hasAnyLine) {
+		if (hasAnyLine) {
+			logger.info("Upload successful");
+		} else {
+			logger.error("There is no line in the file, or file could not be read");
+		}
 	}
 
 	/**

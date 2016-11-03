@@ -4,6 +4,8 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.pojo.AtmosphericInformation;
 import com.crossover.trial.weather.pojo.DataPoint;
@@ -19,7 +21,11 @@ import com.crossover.trial.weather.pojo.DataPointType;
  */
 public class WeatherService {
 
+	private static final String TYPE_MISMATCH_WARNING = "Couldn't update atmospheric data because of data point type mismatch with value: \"{0}\"";
+
 	private static final int DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
+
+	private static final Logger logger = Logger.getLogger(WeatherService.class);
 
 	/**
 	 * atmospheric information for each airport, idx corresponds with
@@ -63,16 +69,19 @@ public class WeatherService {
 	 *            the 3 letter IATA code
 	 * @param pointType
 	 *            the point type {@link DataPointType}
-	 * @param dp
+	 * @param dataPoint
 	 *            a datapoint object holding pointType data
 	 *
 	 * @throws WeatherException
 	 *             if the update can not be completed
 	 */
 	public static void addDataPoint(String iataCode, String pointType,
-			DataPoint dp) throws WeatherException {
-		WeatherService.updateWeather(getAtmosphericInformation(iataCode),
-				pointType, dp);
+			DataPoint dataPoint) throws WeatherException {
+		AtmosphericInformation atmInfo = getAtmosphericInformation(iataCode);
+		WeatherService.updateWeather(atmInfo, pointType, dataPoint);
+		logger.debug(MessageFormat
+				.format("New DataPoint: \"{0}\" has been added to the Atmospheric Info: \"{1}\"",
+						dataPoint, atmInfo));
 	}
 
 	/**
@@ -154,42 +163,41 @@ public class WeatherService {
 	 * update atmospheric information with the given data point for the given
 	 * point type
 	 *
-	 * @param ai
+	 * @param atmInfo
 	 *            the atmospheric information object to update
 	 * @param pointType
 	 *            the data point type as a string
-	 * @param dp
+	 * @param dataPoint
 	 *            the actual data point
 	 */
-	public static void updateWeather(AtmosphericInformation ai,
-			String pointType, DataPoint dp) throws WeatherException {
+	public static void updateWeather(AtmosphericInformation atmInfo,
+			String pointType, DataPoint dataPoint) throws WeatherException {
+		try {
 
-		// switch point type value as data type to jump into data type cases
-		switch (DataPointType.valueOf(pointType.toUpperCase())) {
-		case WIND:
-			updateWind(dp, ai);
-			return;
-		case TEMPERATURE:
-			updateTemperature(dp, ai);
-			return;
-		case HUMIDTY:
-			updateHumidity(dp, ai);
-			return;
-		case PRESSURE:
-			updatePressure(dp, ai);
-			return;
-		case CLOUDCOVER:
-			updateCloudOver(dp, ai);
-			return;
-		case PRECIPITATION:
-			updatePrecipitation(dp, ai);
-			return;
-		default: {
-			throw new WeatherException(
-					MessageFormat
-							.format("couldn't update atmospheric data because of data point type mismatch with value: \"{0}\"",
-									pointType));
-		}
+			// switch point type value as data type to jump into data type cases
+			switch (DataPointType.valueOf(pointType.toUpperCase())) {
+			case WIND:
+				updateWind(dataPoint, atmInfo);
+				return;
+			case TEMPERATURE:
+				updateTemperature(dataPoint, atmInfo);
+				return;
+			case HUMIDTY:
+				updateHumidity(dataPoint, atmInfo);
+				return;
+			case PRESSURE:
+				updatePressure(dataPoint, atmInfo);
+				return;
+			case CLOUDCOVER:
+				updateCloudCover(dataPoint, atmInfo);
+				return;
+			case PRECIPITATION:
+				updatePrecipitation(dataPoint, atmInfo);
+				return;
+			}
+		} catch (IllegalArgumentException iae) {
+			throw new WeatherException(MessageFormat.format(
+					TYPE_MISMATCH_WARNING, pointType));
 		}
 
 	}
@@ -205,11 +213,12 @@ public class WeatherService {
 	 * @param dataPoint
 	 * @param atmInfo
 	 */
-	private static void updateCloudOver(DataPoint dataPoint,
+	private static void updateCloudCover(DataPoint dataPoint,
 			AtmosphericInformation atmInfo) {
 		if (dataPoint.getMean() >= 0 && dataPoint.getMean() < 100) {
 			atmInfo.setCloudCover(dataPoint);
 			atmInfo.setLastUpdateTime(System.currentTimeMillis());
+			logger.debug("Cloudcover value updated");
 		}
 	}
 
@@ -225,6 +234,7 @@ public class WeatherService {
 		if (dataPoint.getMean() >= 0 && dataPoint.getMean() < 100) {
 			atmInfo.setHumidity(dataPoint);
 			atmInfo.setLastUpdateTime(System.currentTimeMillis());
+			logger.debug("Humidity value updated");
 		}
 	}
 
@@ -240,6 +250,7 @@ public class WeatherService {
 		if (dataPoint.getMean() >= 0 && dataPoint.getMean() < 100) {
 			atmInfo.setPrecipitation(dataPoint);
 			atmInfo.setLastUpdateTime(System.currentTimeMillis());
+			logger.debug("Precipitation value updated");
 		}
 	}
 
@@ -255,6 +266,7 @@ public class WeatherService {
 		if (dataPoint.getMean() >= 650 && dataPoint.getMean() < 800) {
 			atmInfo.setPressure(dataPoint);
 			atmInfo.setLastUpdateTime(System.currentTimeMillis());
+			logger.debug("Pressure value updated");
 		}
 	}
 
@@ -270,6 +282,7 @@ public class WeatherService {
 		if (dataPoint.getMean() >= -50 && dataPoint.getMean() < 100) {
 			atmInfo.setTemperature(dataPoint);
 			atmInfo.setLastUpdateTime(System.currentTimeMillis());
+			logger.debug("Temperature value updated");
 		}
 	}
 
@@ -285,6 +298,7 @@ public class WeatherService {
 		if (dataPoint.getMean() >= 0) {
 			atmInfo.setWind(dataPoint);
 			atmInfo.setLastUpdateTime(System.currentTimeMillis());
+			logger.debug("Wind value updated");
 		}
 	}
 

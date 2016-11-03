@@ -70,6 +70,12 @@ public class AtmosphericInformation {
 		return wind;
 	}
 
+	/**
+	 * Checks the class has at least one not-null {@link DataPoint} field
+	 * 
+	 * @return <code>true</code> if it has any <code>false</code> if it has all
+	 *         null value
+	 */
 	public boolean hasAnyDataPointValue() {
 		return this.cloudCover != null || this.humidity != null
 				|| this.pressure != null || this.precipitation != null

@@ -130,24 +130,33 @@ public class WeatherEndpointTest {
 	@Test
 	public void testUpdate() throws Exception {
 
+		// create a sample data point
 		DataPoint windDp = new DataPoint.Builder().withCount(10).withFirst(10)
 				.withMedian(20).withLast(30).withMean(22).build();
+		// update weather of BOS airport as wind data point
 		_update.updateWeather(BOS.getIata(), WIND, _gson.toJson(windDp));
+		// query weather information of BOS airport
 		_query.weather(BOS.getIata(), ZERO).getEntity();
 
+		// ping to query endpoint
 		String ping = _query.ping();
 		JsonElement pingResult = new JsonParser().parse(ping);
+		// get data size value
 		assertEquals(1, pingResult.getAsJsonObject().get(DATASIZE).getAsInt());
 
+		// create a new data point
 		DataPoint cloudCoverDp = new DataPoint.Builder().withCount(4)
 				.withFirst(10).withMedian(60).withLast(100).withMean(50)
 				.build();
+		// update weather of BOS airport again as cloudcover data point
 		_update.updateWeather(BOS.getIata(), CLOUDCOVER,
 				_gson.toJson(cloudCoverDp));
 
+		// query weather of BOS airport
 		@SuppressWarnings("unchecked")
 		List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query
 				.weather(BOS.getIata(), ZERO).getEntity();
+		// check retrieved weather information
 		assertEquals(ais.get(0).getWind(), windDp);
 		assertEquals(ais.get(0).getCloudCover(), cloudCoverDp);
 	}

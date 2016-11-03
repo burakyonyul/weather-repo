@@ -1,7 +1,7 @@
 package com.crossover.trial.weather.exception;
 
 /**
- * An internal exception marker
+ * An internal exception marker specific for weather application
  */
 public class WeatherException extends Exception {
 	/**

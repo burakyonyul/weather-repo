@@ -3,13 +3,8 @@ package com.crossover.trial.weather.pojo;
 /**
  * The various types of data points we can collect.
  *
- * @author code test administrator
+ * @author burak
  */
 public enum DataPointType {
-    WIND,
-    TEMPERATURE,
-    HUMIDTY,
-    PRESSURE,
-    CLOUDCOVER,
-    PRECIPITATION
+	WIND, TEMPERATURE, HUMIDTY, PRESSURE, CLOUDCOVER, PRECIPITATION
 }

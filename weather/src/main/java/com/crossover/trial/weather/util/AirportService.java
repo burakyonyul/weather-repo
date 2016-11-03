@@ -1,9 +1,12 @@
 package com.crossover.trial.weather.util;
 
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.log4j.Logger;
 
 import com.crossover.trial.weather.pojo.AirportData;
 import com.crossover.trial.weather.pojo.AtmosphericInformation;
@@ -16,6 +19,8 @@ import com.crossover.trial.weather.pojo.AtmosphericInformation;
  *
  */
 public class AirportService {
+
+	private static final Logger logger = Logger.getLogger(AirportService.class);
 
 	/** all known airports */
 	private static Map<String, AirportData> airportMap = new HashMap<String, AirportData>();
@@ -50,7 +55,6 @@ public class AirportService {
 	 */
 	public static void addAirport(String iataCode, double latitude,
 			double longitude) {
-
 		// create an airport data using specific constructor with required
 		// parameters
 		AirportData airportData = new AirportData(iataCode, latitude, longitude);
@@ -58,8 +62,12 @@ public class AirportService {
 		airportMap.put(iataCode, airportData);
 		// add atmospheric information of the related airport to the weather
 		// service
+		AtmosphericInformation atmosphericInformation = new AtmosphericInformation();
 		WeatherService.addAtmosphericInformation(iataCode,
-				new AtmosphericInformation());
+				atmosphericInformation);
+		logger.debug(MessageFormat
+				.format("Airport has been added to the map with Airport data value: \"{0}\", and Atmospheric Info value: \"{1}\"",
+						airportData, atmosphericInformation));
 	}
 
 	/**
@@ -153,8 +161,11 @@ public class AirportService {
 		// find airport data using iata code
 		AirportData airportData = AirportService.findAirportData(iata);
 		// update airport data
-		requestFrequency.put(airportData,
-				requestFrequency.getOrDefault(airportData, 0) + 1);
+		int newFreq = requestFrequency.getOrDefault(airportData, 0) + 1;
+		requestFrequency.put(airportData, newFreq);
+		logger.debug(MessageFormat.format(
+				"Request frequency has been updated with new value: \"{0}\"",
+				newFreq));
 	}
 
 }

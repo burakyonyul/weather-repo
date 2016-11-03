@@ -7,7 +7,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * A collected point, including some information about the range of collected
  * values
  *
- * @author code test administrator
+ * @author burak
  */
 public class DataPoint {
 
