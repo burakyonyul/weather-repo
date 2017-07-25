@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.Set;
 
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
@@ -19,16 +20,14 @@ import com.google.gson.Gson;
  * A REST implementation of the WeatherCollector API. Accessible only to airport
  * weather collection sites via secure VPN.
  * 
- * !!!! IMPORTANT !!!!
- * This class has annotations in its method parameters like in the
- * {@link WeatherCollectorEndpoint} interface. So this situation was causing a
- * major bug while parameter passing to the endpoint call. I also removed reused
- * rest parameter annotations in this concrete class implementation and did not
- * change anything in interfaces.
+ * !!!! IMPORTANT !!!! This class has annotations in its method parameters like
+ * in the {@link WeatherCollectorEndpoint} interface. So this situation was
+ * causing a major bug while parameter passing to the endpoint call. I also
+ * removed reused rest parameter annotations in this concrete class
+ * implementation and did not change anything in interfaces.
  *
  * @author burak
  */
-
 @Path("/collect")
 public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 	public final static Logger logger = Logger
